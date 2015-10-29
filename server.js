@@ -4,11 +4,21 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var mongoose = require('mongoose');
 
 // Setup Routes
 var routes = require('./server/routes/index');
 var users = require('./server/routes/users');
 var speakers = require('./server/routes/speakers');
+
+// Database configuration
+var config = require('./server/config/config');
+// connect to our database
+mongoose.connect(config.url);
+// Check if MongoDB is running
+mongoose.connection.on('error', function() {
+  console.error('MongoDB Connection Error. Make sure MongoDB is running.');
+});
 
 var app = express();
 
