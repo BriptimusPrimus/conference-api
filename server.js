@@ -5,6 +5,11 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
+var flash = require('connect-flash');
+var passport = require('passport');
+// Modules to store session
+var session = require('express-session');
+var MongoStore = require('connect-mongo')(session);
 
 // Setup Routes
 var routes = require('./server/routes/index');
@@ -22,6 +27,9 @@ mongoose.connection.on('error', function() {
 
 var app = express();
 
+// Passport configuration
+require('./server/config/passport')(passport);
+
 // view engine setup
 app.set('views', path.join(__dirname, 'server/views'));
 app.set('view engine', 'ejs');
@@ -37,6 +45,24 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', routes);
 app.use('/users', users);
 app.use('/api/speakers', speakers);
+// flash warning messages
+app.use(flash());
+// Init passport authentication
+app.use(passport.initialize());
+// persistent login sessions
+app.use(passport.session());
+// required for passport
+// secret for session
+app.use(session({
+  secret: 'sometextgohere',
+  saveUninitialized: true,
+  resave: true,
+  //store session on MongoDB using express-session + connectmongo
+  store: new MongoStore({
+    url: config.url,
+    collection : 'sessions'
+  })
+}));
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
